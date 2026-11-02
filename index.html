@@ -1,117 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>KidOrca | Electronics Portfolio</title>
-    <style>
-      :root {
-        color-scheme: light dark;
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      }
-      body {
-        margin: 0;
-        padding: 0;
-        line-height: 1.6;
-      }
-      main {
-        max-width: 900px;
-        margin: 0 auto;
-        padding: 1.5rem;
-      }
-      h1, h2 {
-        line-height: 1.25;
-      }
-      nav ul {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
-        list-style: none;
-        padding: 0;
-      }
-      section {
-        margin-top: 2rem;
-      }
-    </style>
-  </head>
-  <body>
-    <main>
-      <header id="home">
-        <h1>KidOrca Electronics Portfolio</h1>
-        <p>
-          I'm an aspiring digital hardware engineer focused on chip design, digital logic,
-          and practical system bring-up. This portfolio documents my progress toward
-          professional work in digital hardware and CPU design.
-        </p>
-        <nav aria-label="Section navigation">
-          <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#projects">Projects</a></li>
-            <li><a href="#journal">Engineering Journal</a></li>
-            <li><a href="#skills">Skills</a></li>
-            <li><a href="#resume">Résumé</a></li>
-            <li><a href="#videos">Videos</a></li>
-          </ul>
-        </nav>
-      </header>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Name – Digital hardware and chip design</title>
+<meta name="description" content="Portfolio and résumé of Your Name, an electronics engineer working toward a career in chipset and digital hardware design.">
+<meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
 
-      <section id="projects">
-        <h2>Projects</h2>
-        <ol>
-          <li>
-            <strong>4-bit ALU</strong> — arithmetic/logic core with addition, subtraction,
-            bitwise operations, and flags.
-          </li>
-          <li>
-            <strong>FPGA Projects</strong> — HDL modules and synthesis flows tested on development boards.
-          </li>
-          <li>
-            <strong>CPU Projects</strong> — simple processor architecture experiments and verification.
-          </li>
-        </ol>
-      </section>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html">Your Name</a>
+    <nav aria-label="Main">
+      <ul><li><a href="index.html" aria-current="page">Home</a></li><li><a href="projects.html">Projects</a></li><li><a href="skills.html">Skills</a></li><li><a href="resume.html">Résumé</a></li><li><a href="contact.html">Contact</a></li></ul>
+    </nav>
+  </div>
+</header>
 
-      <section id="journal">
-        <h2>Engineering Journal</h2>
-        <p>
-          I log design decisions, failed experiments, timing/resource measurements, and lessons learned
-          from each hardware iteration.
-        </p>
-      </section>
+<main class="wrap">
 
-      <section id="skills">
-        <h2>Skills</h2>
-        <ul>
-          <li>Digital logic</li>
-          <li>Soldering</li>
-          <li>Verilog</li>
-          <li>FPGA tools</li>
-          <li>Python</li>
-          <li>Git</li>
-        </ul>
-      </section>
+<section id="home" aria-labelledby="home-h">
+  <div class="hero">
+    <div>
+      <h1 id="home-h">I build digital hardware from the gates up.</h1>
+      <p class="lead">I’m an electronics engineer working toward a career as a chipset engineer. I design and verify digital logic in Verilog, prove it on FPGAs, and build the real thing on a bench. [Add one sentence about where you are now: student, graduate, or working.]</p>
+      <div class="cta">
+        <a class="btn primary" href="projects.html">See my projects</a>
+        <a class="btn ghost" href="assets/resume.pdf">Download résumé</a>
+      </div>
+    </div>
 
-      <section id="resume">
-        <h2>Résumé</h2>
-        <p>
-          Download my résumé and review a summary of my experience.
-          <a href="assets/resume.pdf" download>Download résumé (PDF)</a>
-        </p>
-        <ul>
-          <li>Hands-on digital design projects from ALU to CPU prototypes.</li>
-          <li>Experience documenting bring-up steps, failures, and debugging workflow.</li>
-        </ul>
-      </section>
+    <div class="alu" role="group" aria-labelledby="alu-h">
+      <h2 id="alu-h">Try a 4-bit ALU</h2>
+      <p class="hint">Click the input bits, pick an operation. This runs in your browser and mirrors the logic of my ALU project.</p>
+      <div class="row"><span class="name" id="la">A</span><div class="bits" id="abits" aria-labelledby="la"></div></div>
+      <div class="row"><span class="name" id="lb">B</span><div class="bits" id="bbits" aria-labelledby="lb"></div></div>
+      <div class="row"><label class="name" for="op">Op</label>
+        <select id="op"><option>ADD</option><option>SUB</option><option>AND</option><option>OR</option><option>XOR</option></select></div>
+      <div class="row" aria-live="polite"><span class="name">Result</span><div class="bits" id="rbits"></div>
+        <div class="bits"><span class="led flag" id="fc" title="Carry out">C</span><span class="led flag" id="fz" title="Zero">Z</span></div></div>
+      <p class="readout" id="readout"></p>
+    </div>
+  </div>
+</section>
 
-      <section id="videos">
-        <h2>Videos</h2>
-        <p>Project demonstrations and educational walkthroughs:</p>
-        <ul>
-          <li>Add FPGA bring-up demo link</li>
-          <li>Add ALU testbench walkthrough link</li>
-          <li>Add CPU architecture explainer link</li>
-        </ul>
-      </section>
-    </main>
-  </body>
+<section class="teaser" aria-labelledby="teaser-h">
+  <h2 id="teaser-h">Featured project: 4-bit ALU</h2>
+  <p>[One or two sentences on the ALU: what it does, how you built and verified it.]</p>
+  <p><a class="btn ghost" href="projects.html#featured-h">View the project</a></p>
+</section>
+
+</main>
+
+<footer><div class="wrap">© <span id="yr"></span> Your Name</div></footer>
+
+<script src="assets/site.js"></script>
+</body>
 </html>
