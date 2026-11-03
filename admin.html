@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<meta name="color-scheme" content="dark">
+<title>Admin – Your Name</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+<style>
+main{padding:2rem 0 4rem}
+label{display:block;margin:.8rem 0 .25rem;color:var(--muted);font-size:.92rem}
+input[type=text],input[type=password],textarea,select{width:100%;padding:.55rem .7rem;font:400 1rem var(--sans);color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:2px}
+textarea{min-height:5.5rem;resize:vertical}
+button.btn{cursor:pointer;font:600 1rem var(--sans)}
+button.btn.small{padding:.35rem .7rem;font-size:.9rem}
+.bar{position:sticky;top:3.5rem;z-index:5;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:.75rem 0;background:var(--bg);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:.25rem;flex-wrap:wrap}
+.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);font:500 1rem var(--sans);padding:.5rem .85rem;cursor:pointer}
+.tabs button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--amber)}
+.tabs button:focus-visible{outline:3px solid var(--amber)}
+.msg{font-size:.95rem;color:var(--muted)} .msg.ok{color:var(--green)} .msg.err{color:var(--red)}
+details.panel{margin:1rem 0;padding:0}
+details.panel summary{cursor:pointer;padding:.9rem 1.25rem;font-weight:600}
+details.panel .in{padding:0 1.25rem 1.25rem}
+.acts{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 1rem}
+.rowx{display:grid;grid-template-columns:12rem 1fr auto;gap:.75rem;align-items:end;margin-bottom:.5rem}
+@media (max-width:42rem){.two,.rowx{grid-template-columns:1fr}}
+.note{color:var(--muted);font-size:.95rem;max-width:64ch}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="brand">Site admin</span>
+  <nav aria-label="Admin"><ul><li><a href="index.html">View site</a></li></ul></nav>
+</div></header>
+
+<main class="wrap">
+
+<section id="login" style="border:0;padding-top:1rem">
+  <h1 class="page-title">Sign in</h1>
+  <p class="note">This panel edits your site by saving changes straight to your GitHub repository, so it needs a GitHub token. The token stays in this browser tab only and is never stored on the site.</p>
+  <div class="panel" style="max-width:34rem">
+    <label for="repo">Repository</label><input type="text" id="repo" value="KidOrca/supreme-portfolio" autocomplete="off">
+    <label for="branch">Branch</label><input type="text" id="branch" value="main" autocomplete="off">
+    <label for="token">Fine-grained access token</label><input type="password" id="token" autocomplete="off">
+    <div class="acts"><button class="btn primary" id="connect" type="button">Connect</button></div>
+    <p class="msg" id="loginMsg" role="status"></p>
+  </div>
+</section>
+
+<div id="app" hidden>
+  <div class="bar">
+    <div class="tabs" role="tablist" id="tabs" aria-label="Sections"></div>
+    <div style="display:flex;gap:1rem;align-items:center"><span class="msg" id="msg" role="status"></span><button class="btn primary" id="save" type="button">Save changes</button></div>
+  </div>
+  <div id="view" style="padding-top:1.5rem"></div>
+</div>
+
+</main>
+
+<script>
+(function(){
+  var S = {}, D = null, dirty = false, tab = 'Site';
+  var TYPES = {logic:'4-bit ALU and digital logic', fpga:'FPGA projects', cpu:'Custom CPU', other:'Other engineering work'};
+  var $ = function(id){ return document.getElementById(id); };
+  function el(t, c, x){ var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function say(t, k, id){ var m = $(id || 'msg'); m.textContent = t; m.className = 'msg' + (k ? ' ' + k : ''); }
+  function mark(){ dirty = true; say('Unsaved changes', ''); }
+
+  // ---- GitHub API ----
+  function hdr(){ return {Authorization: 'Bearer ' + S.token, Accept: 'application/vnd.github+json'}; }
+  function api(path, opt){
+    var url = 'https://api.github.com/repos/' + S.repo + '/contents/' + path + (opt ? '' : '?ref=' + encodeURIComponent(S.branch));
+    return fetch(url, opt || {headers: hdr()}).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){
+        if (!r.ok){ var e = new Error(j.message || ('Error ' + r.status)); e.status = r.status; throw e; }
+        return j;
+      });
+    });
+  }
+  function toB64(s){ return btoa(unescape(encodeURIComponent(s))); }
+  function fromB64(b){ return decodeURIComponent(escape(atob(b.replace(/\s/g, '')))); }
+  function put(path, b64, msg){
+    return api(path).catch(function(e){ if (e.status === 404) return {}; throw e; }).then(function(cur){
+      var body = {message: msg, content: b64, branch: S.branch}; if (cur.sha) body.sha = cur.sha;
+      var h = hdr(); h['Content-Type'] = 'application/json';
+      return api(path, {method: 'PUT', headers: h, body: JSON.stringify(body)});
+    });
+  }
+  function readFile(file){
+    return new Promise(function(res, rej){
+      var r = new FileReader(); r.onload = function(){ res(String(r.result).split(',')[1]); }; r.onerror = rej; r.readAsDataURL(file);
+    });
+  }
+  function upload(file, path, done){
+    say('Uploading…', '');
+    readFile(file).then(function(b){ return put(path, b, 'Upload ' + path + ' via admin'); })
+      .then(function(){ say('Uploaded ' + path, 'ok'); if (done) done(path); })
+      .catch(function(e){ say('Upload failed: ' + e.message, 'err'); });
+  }
+
+  // ---- form helpers ----
+  function field(parent, label, obj, key, kind, opts){
+    var id = 'f' + Math.random().toString(36).slice(2), w = el('div');
+    var l = el('label', null, label); l.htmlFor = id; w.appendChild(l);
+    var i;
+    if (kind === 'area') i = el('textarea');
+    else if (kind === 'select'){ i = el('select'); Object.keys(opts).forEach(function(k){ var o = el('option', null, opts[k]); o.value = k; i.appendChild(o); }); }
+    else { i = el('input'); i.type = 'text'; }
+    i.id = id; i.value = obj[key] || '';
+    i.addEventListener('input', function(){ obj[key] = i.value; mark(); });
+    w.appendChild(i); parent.appendChild(w); return i;
+  }
+  function btn(parent, text, fn, cls){ var b = el('button', 'btn ' + (cls || 'ghost small'), text); b.type = 'button'; b.addEventListener('click', fn); parent.appendChild(b); return b; }
+  function fileInput(parent, label, accept, fn){
+    var w = el('div'), l = el('label', null, label), i = el('input'); i.type = 'file'; i.accept = accept;
+    var id = 'u' + Math.random().toString(36).slice(2); i.id = id; l.htmlFor = id;
+    i.addEventListener('change', function(){ if (i.files[0]) fn(i.files[0]); });
+    w.appendChild(l); w.appendChild(i); parent.appendChild(w);
+  }
+  function move(arr, i, d){ var j = i + d; if (j < 0 || j >= arr.length) return; var t = arr[i]; arr[i] = arr[j]; arr[j] = t; mark(); draw(); }
+  function clean(n){ return n.replace(/[^\w.\-]+/g, '-'); }
+
+  // ---- tabs ----
+  var TABS = ['Site', 'Projects', 'Skills', 'Experience', 'Files'];
+  function drawTabs(){
+    var t = $('tabs'); t.textContent = '';
+    TABS.forEach(function(n){
+      var b = el('button', null, n); b.type = 'button'; b.setAttribute('role', 'tab'); b.setAttribute('aria-selected', n === tab ? 'true' : 'false');
+      b.addEventListener('click', function(){ tab = n; draw(); }); t.appendChild(b);
+    });
+  }
+
+  function draw(){
+    drawTabs();
+    var v = $('view'); v.textContent = '';
+    if (tab === 'Site'){
+      var p = el('div', 'panel');
+      p.appendChild(el('h2', null, 'Site details')); p.lastChild.style.fontSize = '1.3rem';
+      field(p, 'Your name (header and footer)', D.site, 'name');
+      field(p, 'Home page headline', D.site, 'headline');
+      field(p, 'Home page intro', D.site, 'lead', 'area');
+      field(p, 'Email address', D.site, 'email');
+      field(p, 'GitHub URL', D.site, 'github');
+      field(p, 'LinkedIn URL', D.site, 'linkedin');
+      field(p, 'Contact page text', D.site, 'contactText', 'area');
+      v.appendChild(p);
+    }
+    if (tab === 'Projects'){
+      v.appendChild(el('p', 'note', 'The featured project appears at the top of the Projects page. Every project also appears under its type in the grid.'));
+      D.projects.forEach(function(p, i){
+        var d = el('details', 'panel'), s = el('summary', null, (p.featured ? 'Featured: ' : '') + (p.title || 'Untitled project') + ' (' + (TYPES[p.type] || p.type) + ')');
+        var b = el('div', 'in'); d.appendChild(s); d.appendChild(b);
+        var g = el('div', 'two'); b.appendChild(g);
+        field(g, 'Title', p, 'title'); field(g, 'Year', p, 'year');
+        field(b, 'Type', p, 'type', 'select', TYPES);
+        field(b, 'Summary', p, 'summary', 'area');
+        g = el('div', 'two'); b.appendChild(g);
+        field(g, 'Built with', p, 'tools'); field(g, 'Result', p, 'result');
+        field(b, 'Link (https://… to your repository or write-up)', p, 'link');
+        var ph = field(b, 'Photo path', p, 'photo');
+        fileInput(b, 'Upload a photo for this project', 'image/*', function(f){
+          var path = 'assets/' + clean(f.name);
+          upload(f, path, function(){ p.photo = path; ph.value = path; mark(); });
+        });
+        var a = el('div', 'acts'); b.appendChild(a);
+        btn(a, p.featured ? 'Featured (click to unfeature)' : 'Make featured', function(){ var was = p.featured; D.projects.forEach(function(x){ x.featured = false; }); p.featured = !was; mark(); draw(); });
+        btn(a, 'Move up', function(){ move(D.projects, i, -1); }); btn(a, 'Move down', function(){ move(D.projects, i, 1); });
+        btn(a, 'Delete project', function(){ if (confirm('Delete "' + (p.title || 'this project') + '"?')){ D.projects.splice(i, 1); mark(); draw(); } });
+        v.appendChild(d);
+      });
+      var a2 = el('div', 'acts');
+      btn(a2, 'Add project', function(){ D.projects.push({title: 'New project', type: 'logic', featured: false, year: '', summary: '', tools: '', result: '', link: '', photo: ''}); mark(); draw(); }, 'primary');
+      v.appendChild(a2);
+    }
+    if (tab === 'Skills'){
+      D.skills.forEach(function(k, i){
+        var r = el('div', 'rowx');
+        field(r, 'Area', k, 'area'); field(r, 'What you have done with it', k, 'detail');
+        btn(r, 'Delete', function(){ D.skills.splice(i, 1); mark(); draw(); });
+        v.appendChild(r);
+      });
+      var a3 = el('div', 'acts'); btn(a3, 'Add skill', function(){ D.skills.push({area: '', detail: ''}); mark(); draw(); }, 'primary'); v.appendChild(a3);
+    }
+    if (tab === 'Experience'){
+      D.experience.forEach(function(e, i){
+        var p = el('div', 'panel'), g = el('div', 'two'); p.appendChild(g);
+        field(g, 'Dates', e, 'dates'); field(g, 'Title and organization', e, 'title');
+        var w = el('div'), l = el('label', null, 'Bullet points (one per line)'), t = el('textarea');
+        t.id = 'b' + i; l.htmlFor = t.id; t.value = (e.bullets || []).join('\n');
+        t.addEventListener('input', function(){ e.bullets = t.value.split('\n').filter(function(x){ return x.trim(); }); mark(); });
+        w.appendChild(l); w.appendChild(t); p.appendChild(w);
+        var a = el('div', 'acts'); p.appendChild(a);
+        btn(a, 'Move up', function(){ move(D.experience, i, -1); }); btn(a, 'Move down', function(){ move(D.experience, i, 1); });
+        btn(a, 'Delete', function(){ D.experience.splice(i, 1); mark(); draw(); });
+        p.style.marginBottom = '1rem'; v.appendChild(p);
+      });
+      var a4 = el('div', 'acts'); btn(a4, 'Add entry', function(){ D.experience.push({dates: '', title: '', bullets: []}); mark(); draw(); }, 'primary'); v.appendChild(a4);
+    }
+    if (tab === 'Files'){
+      var p5 = el('div', 'panel');
+      p5.appendChild(el('h2', null, 'Résumé PDF')); p5.lastChild.style.fontSize = '1.3rem';
+      p5.appendChild(el('p', 'note', 'Replaces assets/resume.pdf. The download buttons on your site point to this file.'));
+      fileInput(p5, 'Choose your résumé (PDF)', 'application/pdf', function(f){ upload(f, 'assets/resume.pdf'); });
+      v.appendChild(p5);
+      var p6 = el('div', 'panel'); p6.style.marginTop = '1rem';
+      p6.appendChild(el('h2', null, 'Other images and files')); p6.lastChild.style.fontSize = '1.3rem';
+      p6.appendChild(el('p', 'note', 'Uploads to the assets folder under the file’s own name. To change a project-type card photo, upload one named type-alu.jpg, type-fpga.jpg, type-cpu.png or type-other.jpg.'));
+      fileInput(p6, 'Choose an image or file', 'image/*,application/pdf', function(f){ upload(f, 'assets/' + clean(f.name)); });
+      v.appendChild(p6);
+    }
+  }
+
+  // ---- connect / save ----
+  function connect(auto){
+    S = {repo: $('repo').value.trim(), branch: $('branch').value.trim() || 'main', token: $('token').value.trim()};
+    if (!S.repo || !S.token){ say('Enter the repository and token.', 'err', 'loginMsg'); return; }
+    say('Connecting…', '', 'loginMsg');
+    api('content.json').then(function(j){
+      D = JSON.parse(fromB64(j.content));
+      D.site = D.site || {}; D.projects = D.projects || []; D.skills = D.skills || []; D.experience = D.experience || [];
+      sessionStorage.setItem('adm', JSON.stringify({repo: S.repo, branch: S.branch, token: S.token}));
+      $('login').hidden = true; $('app').hidden = false; draw();
+    }).catch(function(e){
+      var hint = e.status === 401 ? 'The token was rejected.' : e.status === 404 ? 'Could not find content.json. Check the repository name and that the token can access it.' : e.message;
+      say(hint, 'err', 'loginMsg');
+    });
+  }
+  $('connect').addEventListener('click', connect);
+  $('save').addEventListener('click', function(){
+    say('Saving…', '');
+    put('content.json', toB64(JSON.stringify(D, null, 2) + '\n'), 'Update site content via admin')
+      .then(function(){ dirty = false; say('Saved. Your site updates in about a minute.', 'ok'); })
+      .catch(function(e){ say('Save failed: ' + e.message, 'err'); });
+  });
+  window.addEventListener('beforeunload', function(e){ if (dirty){ e.preventDefault(); e.returnValue = ''; } });
+  try {
+    var saved = JSON.parse(sessionStorage.getItem('adm') || 'null');
+    if (saved){ $('repo').value = saved.repo; $('branch').value = saved.branch; $('token').value = saved.token; connect(true); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

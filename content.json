@@ -1,0 +1,101 @@
+{
+  "site": {
+    "name": "Your Name",
+    "headline": "I build digital hardware from the gates up.",
+    "lead": "I’m an electronics engineer working toward a career as a chipset engineer. I design and verify digital logic in Verilog, prove it on FPGAs, and build the real thing on a bench.",
+    "email": "you@example.com",
+    "github": "https://github.com/KidOrca",
+    "linkedin": "",
+    "contactText": "I’m looking for internships and entry-level roles in digital design, verification, and chip development. The best way to reach me is email."
+  },
+  "projects": [
+    {
+      "title": "4-bit ALU",
+      "type": "logic",
+      "featured": true,
+      "year": "[Year]",
+      "summary": "[Two sentences: what it does (ADD, SUB, AND, OR, XOR with carry and zero flags) and how you built and verified it.]",
+      "tools": "[Verilog, Icarus/ModelSim, breadboard, 74-series ICs]",
+      "result": "[What works on hardware; what you measured]",
+      "link": "",
+      "photo": "assets/alu-board.jpg"
+    },
+    {
+      "title": "[FPGA project name]",
+      "type": "fpga",
+      "featured": false,
+      "year": "[Year]",
+      "summary": "[What it does, which board, which toolchain.]",
+      "tools": "",
+      "result": "",
+      "link": "",
+      "photo": ""
+    },
+    {
+      "title": "[CPU name]",
+      "type": "cpu",
+      "featured": false,
+      "year": "[Year]",
+      "summary": "[Instruction set, single-cycle or pipelined, programs it runs.]",
+      "tools": "",
+      "result": "",
+      "link": "",
+      "photo": ""
+    },
+    {
+      "title": "[Experiment or prototype]",
+      "type": "other",
+      "featured": false,
+      "year": "[Year]",
+      "summary": "[What you built, what you learned.]",
+      "tools": "",
+      "result": "",
+      "link": "",
+      "photo": ""
+    }
+  ],
+  "skills": [
+    {
+      "area": "Digital logic",
+      "detail": "[Combinational and sequential design, state machines, timing, adders and ALUs]"
+    },
+    {
+      "area": "Verilog",
+      "detail": "[RTL design, self-checking testbenches, simulation with Icarus / ModelSim]"
+    },
+    {
+      "area": "FPGA tools",
+      "detail": "[Vivado / Quartus, constraints, synthesis reports, on-board debugging]"
+    },
+    {
+      "area": "Soldering",
+      "detail": "[Through-hole, SMD, rework, bringing up your own boards]"
+    },
+    {
+      "area": "Python",
+      "detail": "[Scripting, test automation, generating test vectors]"
+    },
+    {
+      "area": "Git",
+      "detail": "[Version control for hardware and software projects]"
+    }
+  ],
+  "experience": [
+    {
+      "dates": "[2023 – Present]",
+      "title": "[Job or internship title], [Company]",
+      "bullets": [
+        "[Something you built or fixed, with a number.]",
+        "[Another concrete result.]"
+      ]
+    },
+    {
+      "dates": "[2019 – 2023]",
+      "title": "[Degree], [University]",
+      "bullets": [
+        "[Relevant coursework: digital design, computer architecture, VLSI.]",
+        "[Capstone, thesis, or club project.]"
+      ]
+    }
+  ]
+}
