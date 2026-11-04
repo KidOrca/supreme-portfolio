@@ -1,7 +1,7 @@
 {
   "site": {
-    "name": "Your Name",
-    "headline": "I build digital hardware from the gates up.",
+    "name": "Declan Bayer",
+    "headline": "Hardware from the gates up.",
     "lead": "I’m an electronics engineer working toward a career as a chipset engineer. I design and verify digital logic in Verilog, prove it on FPGAs, and build the real thing on a bench.",
     "email": "you@example.com",
     "github": "https://github.com/KidOrca",
